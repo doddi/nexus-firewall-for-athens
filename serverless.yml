@@ -1,0 +1,17 @@
+service: nexus-firewall-for-athens
+
+frameworkVersion: ">=1.28.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: go1.x
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./nexus-firewall-for-athens
+
+functions:
+  firewall:
+    handler: nexus-firewall-for-athens
