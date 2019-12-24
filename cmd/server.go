@@ -11,33 +11,42 @@ import (
 	"strconv"
 )
 
-func handleConvert(writer http.ResponseWriter, request *http.Request) {
+type LocalServer struct {
+	Port      int
+	Validator validate.Validator
+}
+
+func (server LocalServer) Handle() {
+	server.handleRequests(server.Port)
+}
+
+func (server LocalServer) handleConvert(writer http.ResponseWriter, request *http.Request) {
 	if "POST" != request.Method {
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	hookMessage, err := decodeMessage(request)
+	hookMessage, err := server.decodeMessage(request)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if validate.Validate(hookMessage) {
+	if server.Validator.Validate(hookMessage) {
 		writer.WriteHeader(http.StatusOK)
 	}
 	writer.WriteHeader(http.StatusForbidden)
 }
 
-func decodeMessage(request *http.Request) (athens.Request, error) {
+func (server LocalServer) decodeMessage(request *http.Request) (athens.Request, error) {
 	hookMessage := athens.Request{}
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&hookMessage)
 	return hookMessage, err
 }
 
-func HandleRequests(port int) {
-	http.HandleFunc("/", handleConvert)
+func (server LocalServer) handleRequests(port int) {
+	http.HandleFunc("/", server.handleConvert)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))
 }

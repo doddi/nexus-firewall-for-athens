@@ -12,28 +12,35 @@ import (
 	"nexus-firewall-for-athens/validate"
 )
 
-func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+type LambdaServer struct {
+	Validator validate.Validator
+}
+
+func (server LambdaServer) Handle() {
+	server.handleLambda()
+}
+
+func (server LambdaServer) handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	var buffer bytes.Buffer
 
 	fmt.Println("Request received")
 
-	hookMessage := decodeLambdaMessage(request.Body)
-	_ = validate.Validate(hookMessage)
+	hookMessage := server.decodeMessage(request.Body)
+	_ = server.Validator.Validate(hookMessage)
 
 	return events.APIGatewayProxyResponse{
 		Body:            base64.StdEncoding.EncodeToString(buffer.Bytes()),
 		StatusCode:      200,
-		Headers:         map[string]string{"Content-Type": "application/pdf"},
 		IsBase64Encoded: true,
 	}, nil
 }
 
-func decodeLambdaMessage(request string) athens.Request {
+func (server LambdaServer) decodeMessage(request string) athens.Request {
 	hookMessage := athens.Request{}
 	json.Unmarshal([]byte(request), &hookMessage)
 	return hookMessage
 }
 
-func HandleLambda() {
-	lambda.Start(Handler)
+func (server LambdaServer) handleLambda() {
+	lambda.Start(server.handler)
 }

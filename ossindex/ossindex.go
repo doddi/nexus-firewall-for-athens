@@ -4,45 +4,50 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"nexus-firewall-for-athens/athens"
 	"strings"
 )
 
 type Coordinate struct {
-	Type   string `json:"type"`
-	Namespace string `json:"namespace,omitempty"`
-	Name string `json:"name"`
-	Version string `json:"version"`
+	Type       string `json:"type"`
+	Namespace  string `json:"namespace,omitempty"`
+	Name       string `json:"name"`
+	Version    string `json:"version"`
 	Qualifiers string `json:"qualifiers,omitempty"`
-	Subpath string `json:"subpath, omitempty"`
+	Subpath    string `json:"subpath, omitempty"`
 }
 
-type Vulnerability struct{
-
-}
+type Vulnerability struct{}
 
 type Report struct {
-	Coordinates string `json:"coordinates"`
-	Reference string `json:"reference"`
+	Coordinates     string          `json:"coordinates"`
+	Reference       string          `json:"reference"`
 	Vulnerabilities []Vulnerability `json:"vulnerabilities"`
-
-}
-func Validate(module string, version string) bool {
-	coord := Coordinate{Type:"golang", Name:module, Version:version}
-
-	purl := convertToPurl(coord)
-
-	return checkComponent(purl)
 }
 
-func decodeMessage(response *http.Response) (Report, error) {
+type OssIndex struct {
+}
+
+func (o OssIndex) Validate(request athens.Request) bool {
+	coord := Coordinate{Type: "golang", Name: request.Module, Version: request.Version}
+
+	purl := o.convertToPurl(coord)
+
+	return o.checkComponent(purl)
+}
+
+func (o OssIndex) decodeMessage(response *http.Response) (Report, error) {
 	report := Report{}
 	decoder := json.NewDecoder(response.Body)
 	err := decoder.Decode(&report)
 	return report, err
 }
 
-func checkComponent(purl string) bool {
-	resp, err := http.Get("https://ossindex.sonatype.org" + "/api/v3/component-report/" + purl)
+func (o OssIndex) checkComponent(purl string) bool {
+	const baseUrl = "https://ossindex.sonatype.org"
+	const endpoint = "/api/v3/component-report/"
+
+	resp, err := http.Get(baseUrl + endpoint + purl)
 	if err != nil {
 		fmt.Println(err)
 		return false
@@ -50,20 +55,20 @@ func checkComponent(purl string) bool {
 
 	defer resp.Body.Close()
 
-	report, err := decodeMessage(resp)
+	report, err := o.decodeMessage(resp)
 	if err != nil {
 		fmt.Println(err)
 		return false
 	}
 
-	// TODO Validate types of vulnerabilities
+	// TODO Validator types of vulnerabilities
 	if len(report.Vulnerabilities) > 0 {
 		return false
 	}
 	return true
 }
 
-func convertToPurl(coord Coordinate) string {
+func (o OssIndex) convertToPurl(coord Coordinate) string {
 	builder := strings.Builder{}
 	builder.WriteString("pkg:" + coord.Type + "/")
 	if coord.Namespace != "" {
