@@ -7,7 +7,7 @@ To protect your applications from any already known vulnerabilities Firewall For
 If a package is known to be vulnerable the package is prevented from being fetched from upstream. 
 
 ## Usage
-To make use of this application, your Athens server needs to be configured. 
+To make use of this application, your Athens server needs to be configured to point to this running server.
 To do so, provide a url for ValidatorHook parameter in your configuration file or override using the environment variable `ATHENS_PROXY_VALIDATOR`. For example, `ATHENS_PROXY_VALIDATOR=http://localhost:8080`
 
 This application can run as:
@@ -24,9 +24,12 @@ Specify `--run=server` to run as a local server
 When running as a local server you can specify a port to run under using:
 - `--port`: to specify the port number to run on (default 8080)
 
+If you would like the builds to still pass (respond with http OK) then you can force the build to pass but Athens will still log the warning message
+- `--failBuild`: defaults to true to block the fetching of the component
+
 ## Vulnerability Source
 ### Sonatype OssIndex
-This is the default behaviour, or ca specified using `--using=ossindex`
+This is the default behaviour, or can specified using `--using=ossindex`
 
 If *any* vulnerabilities are known for the package then the package is blocked from being fetched
 

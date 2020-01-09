@@ -17,7 +17,13 @@ type Coordinate struct {
 	Subpath    string `json:"subpath, omitempty"`
 }
 
-type Vulnerability struct{}
+type Vulnerability struct {
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	CvssScore   float64 `json:"cvssScore"`
+	Cve         string  `json:"cve"`
+	Reference   string  `json:"reference"`
+}
 
 type Report struct {
 	Coordinates     string          `json:"coordinates"`
@@ -28,12 +34,20 @@ type Report struct {
 type OssIndex struct {
 }
 
-func (o OssIndex) Validate(request athens.Request) bool {
+func (o OssIndex) Validate(request athens.Request) athens.Response {
 	coord := Coordinate{Type: "golang", Name: request.Module, Version: request.Version}
 
 	purl := o.convertToPurl(coord)
 
-	return o.checkComponent(purl)
+	report := o.checkComponent(purl)
+
+	response := athens.Response{Success: true}
+	if len(report.Vulnerabilities) > 0 {
+		response.Success = false
+		response.Reason = "Vulnerabilities Found"
+		response.Description = fmt.Sprintf("Found %d vulnerabilities, go to %s for more information", len(report.Vulnerabilities), report.Reference)
+	}
+	return response
 }
 
 func (o OssIndex) decodeMessage(response *http.Response) (Report, error) {
@@ -43,14 +57,14 @@ func (o OssIndex) decodeMessage(response *http.Response) (Report, error) {
 	return report, err
 }
 
-func (o OssIndex) checkComponent(purl string) bool {
+func (o OssIndex) checkComponent(purl string) Report {
 	const baseUrl = "https://ossindex.sonatype.org"
 	const endpoint = "/api/v3/component-report/"
 
 	resp, err := http.Get(baseUrl + endpoint + purl)
 	if err != nil {
 		fmt.Println(err)
-		return false
+		return Report{}
 	}
 
 	defer resp.Body.Close()
@@ -58,14 +72,10 @@ func (o OssIndex) checkComponent(purl string) bool {
 	report, err := o.decodeMessage(resp)
 	if err != nil {
 		fmt.Println(err)
-		return false
+		return Report{}
 	}
 
-	// TODO Validator types of vulnerabilities
-	if len(report.Vulnerabilities) > 0 {
-		return false
-	}
-	return true
+	return report
 }
 
 func (o OssIndex) convertToPurl(coord Coordinate) string {

@@ -7,7 +7,7 @@ import (
 
 type NexusIq struct{}
 
-func (n NexusIq) Validate(request athens.Request) bool {
+func (n NexusIq) Validate(request athens.Request) athens.Response {
 	fmt.Println("Unimplemented")
-	return false
+	return athens.Response{Success: true}
 }

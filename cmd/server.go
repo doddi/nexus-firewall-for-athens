@@ -13,6 +13,7 @@ import (
 
 type LocalServer struct {
 	Port      int
+	FailBuild bool
 	Validator validate.Validator
 }
 
@@ -33,10 +34,14 @@ func (server LocalServer) handleConvert(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	if server.Validator.Validate(hookMessage) {
+	response := server.Validator.Validate(hookMessage)
+	if response.Success || !server.FailBuild {
 		writer.WriteHeader(http.StatusOK)
+	} else {
+		writer.WriteHeader(http.StatusForbidden)
 	}
-	writer.WriteHeader(http.StatusForbidden)
+	message, _ := json.Marshal(&response)
+	writer.Write(message)
 }
 
 func (server LocalServer) decodeMessage(request *http.Request) (athens.Request, error) {
