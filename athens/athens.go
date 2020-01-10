@@ -6,7 +6,6 @@ type Request struct {
 }
 
 type Response struct {
-	Success     bool
-	Reason      string
-	Description string
+	Success bool
+	Message string
 }

@@ -44,8 +44,7 @@ func (o OssIndex) Validate(request athens.Request) athens.Response {
 	response := athens.Response{Success: true}
 	if len(report.Vulnerabilities) > 0 {
 		response.Success = false
-		response.Reason = "Vulnerabilities Found"
-		response.Description = fmt.Sprintf("Found %d vulnerabilities, go to %s for more information", len(report.Vulnerabilities), report.Reference)
+		response.Message = fmt.Sprintf("Found %d vulnerabilities, go to %s for more information", len(report.Vulnerabilities), report.Reference)
 	}
 	return response
 }

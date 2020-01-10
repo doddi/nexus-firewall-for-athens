@@ -40,7 +40,7 @@ func (server LocalServer) handleConvert(writer http.ResponseWriter, request *htt
 	} else {
 		writer.WriteHeader(http.StatusForbidden)
 	}
-	message, _ := json.Marshal(&response)
+	message, _ := json.Marshal(&response.Message)
 	writer.Write(message)
 }
 
