@@ -40,8 +40,11 @@ func (server LocalServer) handleConvert(writer http.ResponseWriter, request *htt
 	} else {
 		writer.WriteHeader(http.StatusForbidden)
 	}
-	message, _ := json.Marshal(&response.Message)
-	writer.Write(message)
+
+	if response.Message != "" {
+		message, _ := json.Marshal(&response.Message)
+		writer.Write(message)
+	}
 }
 
 func (server LocalServer) decodeMessage(request *http.Request) (athens.Request, error) {
