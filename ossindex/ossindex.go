@@ -5,17 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"nexus-firewall-for-athens/athens"
-	"strings"
+	purl "nexus-firewall-for-athens/validate"
 )
-
-type Coordinate struct {
-	Type       string `json:"type"`
-	Namespace  string `json:"namespace,omitempty"`
-	Name       string `json:"name"`
-	Version    string `json:"version"`
-	Qualifiers string `json:"qualifiers,omitempty"`
-	Subpath    string `json:"subpath, omitempty"`
-}
 
 type Vulnerability struct {
 	Title       string  `json:"title"`
@@ -35,9 +26,8 @@ type OssIndex struct {
 }
 
 func (o OssIndex) Validate(request athens.Request) athens.Response {
-	coord := Coordinate{Type: "golang", Name: request.Module, Version: request.Version}
-
-	purl := o.convertToPurl(coord)
+	coord := purl.Coordinate{Type: "golang", Name: request.Module, Version: request.Version}
+	purl := purl.ConvertToPurlString(coord)
 
 	report := o.checkComponent(purl)
 
@@ -75,23 +65,4 @@ func (o OssIndex) checkComponent(purl string) Report {
 	}
 
 	return report
-}
-
-func (o OssIndex) convertToPurl(coord Coordinate) string {
-	builder := strings.Builder{}
-	builder.WriteString("pkg:" + coord.Type + "/")
-	if coord.Namespace != "" {
-		builder.WriteString(coord.Namespace + "/")
-	}
-	builder.WriteString(coord.Name)
-	if coord.Version != "" {
-		builder.WriteString("@" + coord.Version)
-	}
-	if coord.Qualifiers != "" {
-		builder.WriteString("?" + coord.Qualifiers)
-	}
-	if coord.Subpath != "" {
-		builder.WriteString("#" + coord.Subpath)
-	}
-	return builder.String()
 }
