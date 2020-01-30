@@ -34,8 +34,13 @@ This is the default behaviour, or can specified using `--using=ossindex`
 If *any* vulnerabilities are known for the package then the package is blocked from being fetched
 
 ### Sonatype Nexus IQ Server
-Coming .....
+Specify `--using=nexusiq`
 
+To use basic authentication supply `--username` and `--password`
+An applicationId is required to evaluate against policies, use `--appid` to supply the correct Application Id.
+To determine the application id follow the instructions supplied here https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2#ApplicationRESTAPIs-v2-Step5-UpdateApplicationInformation and use the `id` field.
+
+The results using Nexus Iq will provide policy violations, security vulnerabilities and license information.
 
 ## To Do
 Any contributions would be great!
